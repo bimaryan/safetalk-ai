@@ -4,8 +4,14 @@ import { Shield, Lock, PhoneCall, MessageSquare, User } from "lucide-react";
 
 const Home = () => {
   const navigate = useNavigate();
+
   // State untuk mengatur tampilan: 'splash', 'onboarding', atau 'selection'
-  const [currentView, setCurrentView] = useState("splash");
+  // Gunakan lazy initialization untuk mengecek localStorage saat pertama kali render
+  const [currentView, setCurrentView] = useState(() => {
+    const hasSeenOnboarding = localStorage.getItem("hasSeenOnboarding");
+    return hasSeenOnboarding === "true" ? "selection" : "splash";
+  });
+
   const [currentSlide, setCurrentSlide] = useState(0);
 
   // Auto-hide Splash Screen setelah 2.5 detik
@@ -41,6 +47,8 @@ const Home = () => {
     if (currentSlide < onboardingData.length - 1) {
       setCurrentSlide(currentSlide + 1);
     } else {
+      // Simpan status ke localStorage saat onboarding selesai
+      localStorage.setItem("hasSeenOnboarding", "true");
       setCurrentView("selection");
     }
   };
