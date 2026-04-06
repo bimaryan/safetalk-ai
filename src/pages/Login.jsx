@@ -1,38 +1,46 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
-import {
-  Mail,
-  Lock,
-  Eye,
-  EyeOff,
-  ChevronLeft,
-  Smartphone,
-  Monitor,
-  ShieldCheck,
-  Chrome,
-} from "lucide-react";
+import { Link, useNavigate } from "react-router-dom"; // Tambahkan useNavigate
+import { Mail, Lock, Eye, EyeOff, Monitor, ShieldCheck } from "lucide-react";
 
 const Login = () => {
+  const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
+  // State untuk menangkap input
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
 
   const handleSubmit = (e) => {
     e.preventDefault();
     setIsLoading(true);
-    // Simulasi loading biar kelihatan niat
-    setTimeout(() => setIsLoading(false), 2000);
+
+    // Simulasi proses ke server
+    setTimeout(() => {
+      setIsLoading(false);
+
+      // Cek apakah yang login adalah Admin Demo
+      if (username === "admin" && password === "123") {
+        localStorage.setItem("isAuthenticated", "true");
+        localStorage.setItem("userRole", "admin");
+        navigate("/admin"); // Arahkan ke dashboard admin
+      } else {
+        // Anggap selain admin adalah user biasa
+        localStorage.setItem("isAuthenticated", "true");
+        localStorage.setItem("userRole", "user");
+        navigate("/chat"); // Arahkan ke halaman chat
+      }
+    }, 1500);
   };
 
   return (
     <div className="min-h-screen bg-white flex overflow-hidden">
-      {/* --- SISI KIRI: Branding (Hidden on Mobile) --- */}
+      {/* --- SISI KIRI: Tetap Sama --- */}
       <div className="hidden lg:flex lg:w-1/2 bg-[#0055A5] relative items-center justify-center p-12">
-        {/* Dekorasi Abstract */}
         <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
           <div className="absolute top-[-10%] left-[-10%] w-72 h-72 rounded-full bg-white blur-3xl"></div>
           <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 rounded-full bg-blue-400 blur-3xl"></div>
         </div>
-
         <div className="relative z-10 text-center max-w-md">
           <div className="bg-white/10 backdrop-blur-md p-4 rounded-3xl inline-block mb-6 ring-1 ring-white/20">
             <ShieldCheck className="w-16 h-16 text-white" />
@@ -49,10 +57,8 @@ const Login = () => {
 
       {/* --- SISI KANAN: Form Login --- */}
       <div className="w-full lg:w-1/2 flex flex-col h-screen overflow-y-auto bg-white">
-        {/* Form Container */}
         <div className="flex-1 flex flex-col justify-center px-8 sm:px-12 lg:px-20">
           <div className="w-full mx-auto">
-            {/* Title Section */}
             <div className="mb-10 text-center lg:text-left">
               <h1 className="text-4xl font-black text-slate-800 tracking-tight mb-3">
                 Selamat Datang!
@@ -62,7 +68,6 @@ const Login = () => {
               </p>
             </div>
 
-            {/* Login Form */}
             <form onSubmit={handleSubmit} className="space-y-5">
               <div className="space-y-2">
                 <label className="text-[13px] font-black text-slate-700 uppercase tracking-wider ml-1">
@@ -78,7 +83,9 @@ const Login = () => {
                   <input
                     type="text"
                     required
-                    placeholder="nama@email.com"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    placeholder="nama@email.com atau username"
                     className="block w-full pl-12 pr-4 py-4 bg-slate-50/50 border-2 border-slate-100 rounded-2xl focus:bg-white focus:ring-4 focus:ring-blue-50 focus:border-[#3B82F6] outline-none transition-all text-slate-700 placeholder:text-slate-400 font-medium"
                   />
                 </div>
@@ -98,6 +105,8 @@ const Login = () => {
                   <input
                     type={showPassword ? "text" : "password"}
                     required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"
                     className="block w-full pl-12 pr-12 py-4 bg-slate-50/50 border-2 border-slate-100 rounded-2xl focus:bg-white focus:ring-4 focus:ring-blue-50 focus:border-[#3B82F6] outline-none transition-all text-slate-700 placeholder:text-slate-400 font-medium"
                   />
@@ -129,17 +138,17 @@ const Login = () => {
                 </Link>
               </div>
 
-              {/* Demo Info Box */}
               <div className="bg-orange-50 border-2 border-orange-100 rounded-2xl p-4 flex gap-3">
                 <div className="bg-orange-200/50 p-2 rounded-xl h-fit">
                   <Monitor size={16} className="text-orange-600" />
                 </div>
                 <p className="text-xs text-orange-700 font-bold leading-relaxed">
                   Demo Admin: Username "admin", Password "123"
+                  <br />
+                  (Selain itu akan masuk sebagai User biasa)
                 </p>
               </div>
 
-              {/* Submit Button */}
               <button
                 type="submit"
                 disabled={isLoading}
@@ -153,7 +162,6 @@ const Login = () => {
               </button>
             </form>
 
-            {/* Footer Registration */}
             <div className="mt-10 text-center">
               <p className="text-slate-500 font-bold">
                 Belum punya akun?{" "}
