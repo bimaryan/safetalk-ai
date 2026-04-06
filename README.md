@@ -1,11 +1,10 @@
-### Opsi 2: Singkat dan Praktis (To-the-point)
+## Panduan Instalasi
 
-## Cara Install
-
-1. *Clone* repositori ini terlebih dahulu:
+1. Klon (*clone*) repositori ini ke perangkat lokal Anda dengan menjalankan perintah berikut:
    `git clone https://github.com/bimaryan/safetalk-ai.git`
-2. Buka folder proyek tersebut di Visual Studio Code.
-3. Buka terminal di VS Code, lalu instal *dependencies* dengan perintah:
+2. Buka direktori proyek tersebut menggunakan Visual Studio Code.
+3. Buka terminal terintegrasi (Integrated Terminal) di dalam Visual Studio Code.
+4. Instal seluruh dependencies yang diperlukan dengan menjalankan perintah:
    `npm install`
-4. Jika instalasi sudah selesai, jalankan proyek dengan perintah:
+5. Setelah proses instalasi selesai, jalankan development server dengan perintah:
    `npm run dev`
