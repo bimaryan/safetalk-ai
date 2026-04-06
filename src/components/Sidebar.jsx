@@ -8,7 +8,7 @@ import {
 
 const Sidebar = () => {
   const menuItems = [
-    { icon: MessageSquare, label: "AI Chat", path: "/" },
+    { icon: MessageSquare, label: "AI Chat", path: "/chat" },
   ];
 
   return (
@@ -68,7 +68,7 @@ const Sidebar = () => {
       <div className="p-4 border-t border-blue-600/30 mt-auto">
         <div className="bg-blue-800/50 rounded-lg p-3 text-sm text-blue-100">
           <p className="text-xs opacity-70">Logged in as</p>
-          <p className="text-white font-bold tracking-wide">User Joki</p>
+          <p className="text-white font-bold tracking-wide">Anonim</p>
         </div>
       </div>
     </aside>
