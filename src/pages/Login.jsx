@@ -138,17 +138,6 @@ const Login = () => {
                 </Link>
               </div>
 
-              <div className="bg-orange-50 border-2 border-orange-100 rounded-2xl p-4 flex gap-3">
-                <div className="bg-orange-200/50 p-2 rounded-xl h-fit">
-                  <Monitor size={16} className="text-orange-600" />
-                </div>
-                <p className="text-xs text-orange-700 font-bold leading-relaxed">
-                  Demo Admin: Username "admin", Password "123"
-                  <br />
-                  (Selain itu akan masuk sebagai User biasa)
-                </p>
-              </div>
-
               <button
                 type="submit"
                 disabled={isLoading}

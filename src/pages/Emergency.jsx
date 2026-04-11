@@ -41,7 +41,7 @@ const Emergency = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-10">
+    <div className="min-h-screen bg-gray-100 pb-10">
       <div className="bg-red-600 pt-8 pb-12 px-6 rounded-b-[2.5rem] shadow-md relative">
         <div className="w-full mx-auto">
           <div className="flex items-center gap-3 mb-2">

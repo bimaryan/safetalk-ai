@@ -130,7 +130,7 @@ const Home = () => {
 
   // 3. SELECTION SCREEN
   return (
-    <div className="flex flex-col items-center min-h-screen bg-slate-50 p-6 pt-12">
+    <div className="flex flex-col items-center min-h-screen bg-gray-100 p-6 pt-12">
       <div className="bg-blue-500 p-4 rounded-2xl shadow-md mb-6">
         <Shield className="w-10 h-10 text-white" />
       </div>
@@ -184,16 +184,12 @@ const Home = () => {
       </div>
 
       <div className="mt-auto pt-8 pb-4 w-full max-w-2xl text-center">
-        <div className="flex items-center justify-center space-x-2 text-xs text-gray-500 bg-gray-100 p-3 rounded-lg mb-4">
-          <Lock className="w-4 h-4 text-orange-400" />
+        <div className="flex items-center text-xs text-gray-500 bg-yellow-100 p-3 rounded-lg mb-4">
           <span>
             Semua data Anda terenkripsi dan dijaga kerahasiaannya. Kami tidak
             membagikan informasi pribadi Anda kepada pihak ketiga tanpa izin.
           </span>
         </div>
-        <p className="text-xs text-gray-400">
-          Demo Admin: Username "admin", Password "123"
-        </p>
       </div>
     </div>
   );
