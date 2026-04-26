@@ -6,7 +6,6 @@ const Home = () => {
   const navigate = useNavigate();
 
   // State untuk mengatur tampilan: 'splash', 'onboarding', atau 'selection'
-  // Gunakan lazy initialization untuk mengecek localStorage saat pertama kali render
   const [currentView, setCurrentView] = useState(() => {
     const hasSeenOnboarding = localStorage.getItem("hasSeenOnboarding");
     return hasSeenOnboarding === "true" ? "selection" : "splash";
@@ -54,8 +53,13 @@ const Home = () => {
   };
 
   const handleAnonimClick = () => {
-    // Set status di local storage bahwa dia adalah anonim
-    localStorage.setItem("userRole", "anonim");
+    // PENTING: Bersihkan semua jejak login lama (jika ada)
+    // Ini memastikan backend Laravel benar-benar membaca sesi ini sebagai Anonim murni
+    localStorage.removeItem("safetalk_token");
+    localStorage.removeItem("isAuthenticated");
+    localStorage.removeItem("userRole");
+
+    // Arahkan ke chat
     navigate("/chat");
   };
 

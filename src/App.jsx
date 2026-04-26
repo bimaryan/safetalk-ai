@@ -4,8 +4,7 @@ import {
   Routes,
   Route,
   Navigate,
-  Outlet,
-} from "react-router-dom"; // Tambahkan Navigate dan Outlet
+} from "react-router-dom";
 
 // Layouts & Pages
 import DashboardLayout from "./layouts/DashboardLayout";
@@ -17,18 +16,24 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Home from "./pages/Home";
 import AdminDashboard from "./pages/AdminDashboard";
-import AdminCaseDetail from "./pages/AdminCaseDetail";
+import AdminReportDetail from "./pages/AdminReportDetail";
 import ProtectedRoute from "./components/ProtectedRoute";
+import AdminReports from "./pages/AdminReports";
+import Panduan from "./pages/Panduan";
 
-// --- BUAT LOGIKA IF-ELSE UNTUK CHAT GUARD DI SINI ---
+// --- LOGIKA GUARD UNTUK HALAMAN CHAT KLIEN ---
 const ChatGuard = () => {
   const role = localStorage.getItem("userRole");
 
-  if (role === "user" || role === "anonim") {
-    // JIKA dia user biasa ATAU anonim, izinkan masuk ke Dashboard/Chat
+  // Izinkan masuk JIKA role adalah "warga" (sudah login) ATAU null/tidak ada (anonim)
+  // Tolak JIKA role adalah "admin" (Admin punya dashboard sendiri)
+  if (role === "warga" || !role) {
     return <DashboardLayout />;
+  } else if (role === "admin") {
+    // Tendang admin ke dashboardnya sendiri
+    return <Navigate to="/admin" replace />;
   } else {
-    // JIKA TIDAK, tendang kembali ke Home (halaman pilih akses)
+    // Jaga-jaga jika ada string aneh
     return <Navigate to="/" replace />;
   }
 };
@@ -42,12 +47,13 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
 
-        {/* --- BAGIAN CHAT DIBUNGKUS DENGAN CHATGUARD (IF-ELSE) --- */}
+        {/* --- BAGIAN CHAT DIBUNGKUS DENGAN CHATGUARD --- */}
         <Route element={<ChatGuard />}>
           <Route path="/chat" element={<Chat />} />
+          <Route path="/panduan" element={<Panduan />} />
         </Route>
 
-        {/* Emergency bisa dibiarkan publik atau digabung guard */}
+        {/* Emergency Route (Bisa diakses siapa saja, no guard needed) */}
         <Route element={<EmergencyLayout />}>
           <Route path="/emergency" element={<Emergency />} />
         </Route>
@@ -56,7 +62,8 @@ function App() {
         <Route element={<ProtectedRoute />}>
           <Route element={<AdminLayout />}>
             <Route path="/admin" element={<AdminDashboard />} />
-            <Route path="/admin/detail/:id" element={<AdminCaseDetail />} />
+            <Route path="/admin/reports" element={<AdminReports />} />
+            <Route path="/admin/reports/:id" element={<AdminReportDetail />} />
           </Route>
         </Route>
       </Routes>

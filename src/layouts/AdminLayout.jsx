@@ -1,8 +1,10 @@
 import React, { useState } from "react";
-import { Outlet, useNavigate } from "react-router-dom";
+import { Outlet, useNavigate, NavLink } from "react-router-dom"; // Tambahkan NavLink
+import Swal from "sweetalert2";
 import {
   Shield,
   LayoutDashboard,
+  FileText, // Tambahkan ikon FileText untuk laporan
   User,
   LogOut,
   Menu,
@@ -15,14 +17,50 @@ const AdminLayout = () => {
   const navigate = useNavigate();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-  // Fungsi untuk handle logout
   const handleLogout = () => {
-    localStorage.removeItem("isAuthenticated");
-    localStorage.removeItem("userRole");
-    navigate("/login");
+    Swal.fire({
+      title: "Keluar dari Panel Admin?",
+      text: "Sesi Anda akan diakhiri secara aman.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#2563eb",
+      cancelButtonColor: "#e11d48",
+      confirmButtonText: "Ya, Keluar",
+      cancelButtonText: "Batal",
+      shape: "rounded",
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          const token = localStorage.getItem("safetalk_token");
+          if (token) {
+            await fetch("http://127.0.0.1:8000/api/auth/logout", {
+              method: "POST",
+              headers: {
+                Accept: "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+            });
+          }
+        } catch (error) {
+          console.error("Gagal koneksi ke API Logout:", error);
+        }
+
+        localStorage.removeItem("isAuthenticated");
+        localStorage.removeItem("userRole");
+        localStorage.removeItem("safetalk_token");
+
+        Swal.fire({
+          title: "Berhasil Keluar!",
+          icon: "success",
+          timer: 1500,
+          showConfirmButton: false,
+        });
+
+        navigate("/login");
+      }
+    });
   };
 
-  // Mendapatkan tanggal hari ini secara dinamis
   const today = new Date();
   const options = {
     weekday: "long",
@@ -32,10 +70,20 @@ const AdminLayout = () => {
   };
   const formattedDate = today.toLocaleDateString("id-ID", options);
 
+  // Array untuk Menu Sidebar Admin
+  const adminMenus = [
+    { name: "Dashboard", path: "/admin", icon: LayoutDashboard, exact: true },
+    {
+      name: "Data Laporan",
+      path: "/admin/reports",
+      icon: FileText,
+      exact: false,
+    },
+  ];
+
   return (
-    // Background utama menjadi abu-abu cerah
     <div className="flex h-screen bg-slate-50 font-sans overflow-hidden">
-      {/* OVERLAY: Latar belakang gelap saat sidebar terbuka di HP */}
+      {/* OVERLAY MOBILE */}
       {isSidebarOpen && (
         <div
           className="fixed inset-0 bg-black/50 z-40 md:hidden"
@@ -43,13 +91,12 @@ const AdminLayout = () => {
         />
       )}
 
-      {/* SIDEBAR ADMIN (Biru gelap) */}
+      {/* SIDEBAR */}
       <aside
         className={`absolute inset-y-0 left-0 z-50 flex w-72 flex-col bg-blue-700 p-6 shadow-2xl text-white transform transition-transform duration-300 ease-in-out md:relative md:translate-x-0 ${
           isSidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        {/* Logo & Tombol Close (Mobile) */}
         <div className="flex items-center justify-between mb-10">
           <div className="flex items-center gap-3">
             <div className="bg-white p-2 rounded-xl shadow-sm">
@@ -61,7 +108,6 @@ const AdminLayout = () => {
             </div>
           </div>
 
-          {/* Tombol Close (Silang) hanya muncul di Mobile */}
           <button
             className="md:hidden p-2 bg-blue-800/50 rounded-lg hover:bg-blue-800 transition"
             onClick={() => setIsSidebarOpen(false)}
@@ -70,21 +116,29 @@ const AdminLayout = () => {
           </button>
         </div>
 
-        {/* Menu Navigation */}
-        <nav className="flex-1">
-          <button
-            onClick={() => {
-              setIsSidebarOpen(false);
-              navigate("/admin");
-            }}
-            className="flex items-center gap-3 w-full bg-blue-600 shadow-inner p-4 rounded-2xl font-semibold transition hover:bg-blue-500"
-          >
-            <LayoutDashboard className="w-5 h-5" />
-            Dashboard
-          </button>
+        {/* MENU NAVIGATION YANG DIPERBARUI */}
+        <nav className="flex-1 space-y-2">
+          {adminMenus.map((menu) => (
+            <NavLink
+              key={menu.path}
+              to={menu.path}
+              end={menu.exact} // Agar rute "/admin" tidak aktif saat di "/admin/reports"
+              onClick={() => setIsSidebarOpen(false)}
+              className={({ isActive }) =>
+                `flex items-center gap-3 w-full p-4 rounded-2xl font-semibold transition-all duration-200 ${
+                  isActive
+                    ? "bg-blue-600 shadow-inner text-white" // Warna saat aktif
+                    : "text-blue-100 hover:bg-blue-800 hover:text-white" // Warna saat pasif
+                }`
+              }
+            >
+              <menu.icon className="w-5 h-5" />
+              {menu.name}
+            </NavLink>
+          ))}
         </nav>
 
-        {/* Profile & Logout */}
+        {/* FOOTER SIDEBAR */}
         <div>
           <div className="flex items-center gap-3 bg-blue-800 p-4 rounded-2xl mb-3 shadow-sm">
             <div className="bg-blue-500 p-2 rounded-full">
@@ -108,12 +162,9 @@ const AdminLayout = () => {
 
       {/* MAIN CONTENT AREA */}
       <div className="flex-1 flex flex-col h-screen overflow-hidden">
-        {/* --- NAVBAR ATAS (Warna Biru) --- */}
-        {/* Diubah menjadi bg-blue-600 dengan text-white */}
+        {/* NAVBAR ATAS */}
         <header className="flex items-center justify-between bg-blue-600 text-white px-6 md:px-8 py-4 shadow-md z-10 shrink-0">
-          {/* Bagian Kiri: Tombol Hamburger & Sapaan */}
           <div className="flex items-center gap-3 md:gap-4">
-            {/* Hamburger Button (Hanya tampil di HP) */}
             <button
               onClick={() => setIsSidebarOpen(true)}
               className="md:hidden p-2.5 bg-blue-700/50 hover:bg-blue-700 rounded-xl transition shadow-sm border border-blue-500/50"
@@ -121,9 +172,7 @@ const AdminLayout = () => {
               <Menu className="w-6 h-6 text-white" />
             </button>
 
-            {/* Teks Sapaan */}
             <div className="flex flex-col justify-center min-w-0">
-              {/* Teks menjadi putih */}
               <h2 className="text-xl md:text-2xl font-extrabold tracking-tight truncate">
                 Selamat Datang, Admin!
               </h2>
@@ -136,18 +185,15 @@ const AdminLayout = () => {
             </div>
           </div>
 
-          {/* Bagian Kanan: Tombol Lonceng/Notifikasi */}
           <div className="flex items-center justify-end flex-shrink-0">
-            {/* Tombol lonceng disesuaikan dengan background biru */}
             <button className="relative bg-blue-700/50 hover:bg-blue-700 p-2.5 md:p-3 rounded-xl transition-all shadow-sm border border-blue-500/50">
               <Bell className="w-5 h-5 text-white" />
-              {/* Indikator Notifikasi Aktif */}
               <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 border-2 border-blue-600 rounded-full"></span>
             </button>
           </div>
         </header>
 
-        {/* Tempat Konten Halaman (Scrollable Area) */}
+        {/* AREA KONTEN (Outlet) */}
         <main className="flex-1 p-6 md:p-8 overflow-y-auto">
           <Outlet />
         </main>

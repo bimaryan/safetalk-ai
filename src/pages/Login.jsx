@@ -1,41 +1,75 @@
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom"; // Tambahkan useNavigate
-import { Mail, Lock, Eye, EyeOff, Monitor, ShieldCheck } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import {
+  Mail,
+  Lock,
+  Eye,
+  EyeOff,
+  ShieldCheck,
+  AlertCircle,
+} from "lucide-react"; // Tambahkan AlertCircle
 
 const Login = () => {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState(""); // State untuk pesan error
 
   // State untuk menangkap input
-  const [username, setUsername] = useState("");
+  const [username, setUsername] = useState(""); // Bisa berisi email atau username
   const [password, setPassword] = useState("");
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setErrorMsg("");
     setIsLoading(true);
 
-    // Simulasi proses ke server
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      // Tembak API Laravel
+      const response = await fetch("http://127.0.0.1:8000/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify({
+          login: username, // Backend Laravel Anda meminta key bernama 'login'
+          password: password,
+        }),
+      });
 
-      // Cek apakah yang login adalah Admin Demo
-      if (username === "admin" && password === "123") {
+      const result = await response.json();
+
+      if (response.ok && result.status === "success") {
+        // Simpan token untuk autentikasi API selanjutnya
+        localStorage.setItem("safetalk_token", result.token);
         localStorage.setItem("isAuthenticated", "true");
-        localStorage.setItem("userRole", "admin");
-        navigate("/admin"); // Arahkan ke dashboard admin
+        localStorage.setItem("userRole", result.user.role);
+
+        // Hapus session anonim jika user memilih login
+        localStorage.removeItem("safetalk_session");
+
+        // Arahkan berdasarkan role yang didapat dari database
+        if (result.user.role === "admin") {
+          navigate("/admin");
+        } else {
+          navigate("/chat");
+        }
       } else {
-        // Anggap selain admin adalah user biasa
-        localStorage.setItem("isAuthenticated", "true");
-        localStorage.setItem("userRole", "user");
-        navigate("/chat"); // Arahkan ke halaman chat
+        // Tampilkan error jika password/email salah
+        setErrorMsg(result.message || "Kredensial tidak valid.");
       }
-    }, 1500);
+    } catch (error) {
+      console.error("Login Error:", error);
+      setErrorMsg("Gagal terhubung ke server. Pastikan backend aktif.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <div className="min-h-screen bg-white flex overflow-hidden">
-      {/* --- SISI KIRI: Tetap Sama --- */}
+      {/* --- SISI KIRI: Branding --- */}
       <div className="hidden lg:flex lg:w-1/2 bg-[#0055A5] relative items-center justify-center p-12">
         <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
           <div className="absolute top-[-10%] left-[-10%] w-72 h-72 rounded-full bg-white blur-3xl"></div>
@@ -68,6 +102,17 @@ const Login = () => {
               </p>
             </div>
 
+            {/* --- TAMPILAN ERROR --- */}
+            {errorMsg && (
+              <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-500 rounded-r-xl flex gap-3 items-start animate-pulse">
+                <AlertCircle
+                  className="text-red-500 shrink-0 mt-0.5"
+                  size={18}
+                />
+                <p className="text-sm font-bold text-red-800">{errorMsg}</p>
+              </div>
+            )}
+
             <form onSubmit={handleSubmit} className="space-y-5">
               <div className="space-y-2">
                 <label className="text-[13px] font-black text-slate-700 uppercase tracking-wider ml-1">
@@ -82,7 +127,6 @@ const Login = () => {
                   </div>
                   <input
                     type="text"
-                    required
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                     placeholder="nama@email.com atau username"
@@ -104,7 +148,6 @@ const Login = () => {
                   </div>
                   <input
                     type={showPassword ? "text" : "password"}
-                    required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"
