@@ -35,7 +35,7 @@ const AdminReportDetail = () => {
       }
 
       const response = await fetch(
-        `http://127.0.0.1:8000/api/admin/reports/${id}`,
+        `https://backend.safetalkai.my.id/api/admin/reports/${id}`,
         {
           method: "GET",
           headers: {
@@ -80,7 +80,7 @@ const AdminReportDetail = () => {
     try {
       const token = localStorage.getItem("safetalk_token");
       const res = await fetch(
-        `http://127.0.0.1:8000/api/admin/reports/${id}/close`,
+        `https://backend.safetalkai.my.id/api/admin/reports/${id}/close`,
         {
           method: "POST",
           headers: { Authorization: `Bearer ${token}` },
@@ -130,7 +130,7 @@ const AdminReportDetail = () => {
     try {
       const token = localStorage.getItem("safetalk_token");
       const res = await fetch(
-        `http://127.0.0.1:8000/api/admin/reports/${id}/reply`,
+        `https://backend.safetalkai.my.id/api/admin/reports/${id}/reply`,
         {
           method: "POST",
           headers: {

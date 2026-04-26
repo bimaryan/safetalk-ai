@@ -6,6 +6,7 @@ import {
   Eye,
   ShieldAlert,
   Clock,
+  Download, // Icon baru untuk export
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -13,6 +14,7 @@ const AdminReports = () => {
   const navigate = useNavigate();
   const [reports, setReports] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isExporting, setIsExporting] = useState(false); // State loading untuk export
   const [pagination, setPagination] = useState({
     current_page: 1,
     last_page: 1,
@@ -30,7 +32,6 @@ const AdminReports = () => {
         return;
       }
 
-      // Tambahkan parameter search ke URL
       const response = await fetch(
         `http://127.0.0.1:8000/api/admin/reports?page=${page}&search=${search}`,
         {
@@ -58,7 +59,46 @@ const AdminReports = () => {
     }
   };
 
-  // Trigger pencarian saat tekan Enter
+  // Fungsi untuk Export Excel
+  const handleExportExcel = async () => {
+    setIsExporting(true);
+    try {
+      const token = localStorage.getItem("safetalk_token");
+      const response = await fetch(
+        `https://backend.safetalkai.my.id/api/admin/reports/export?search=${searchQuery}`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      if (response.ok) {
+        // Mengubah response menjadi blob (file)
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+
+        // Membuat link download temporary
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `Laporan-SafeTalk-${new Date().toISOString().split("T")[0]}.xlsx`;
+        document.body.appendChild(link);
+        link.click();
+
+        // Bersihkan link
+        window.URL.revokeObjectURL(url);
+        link.remove();
+      } else {
+        console.error("Gagal mendownload file");
+      }
+    } catch (error) {
+      console.error("Error saat export:", error);
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   const handleSearchKeyPress = (e) => {
     if (e.key === "Enter") {
       fetchReports(1, searchQuery);
@@ -101,19 +141,35 @@ const AdminReports = () => {
           </p>
         </div>
 
-        {/* INPUT PENCARIAN (Filter Tabel) */}
-        <div className="relative group">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Search className="h-4 w-4 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
+        <div className="flex flex-col sm:flex-row items-center gap-3">
+          {/* TOMBOL EXPORT EXCEL */}
+          <button
+            onClick={handleExportExcel}
+            disabled={isExporting}
+            className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-bold transition-all shadow-sm shadow-emerald-200 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isExporting ? (
+              <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+            ) : (
+              <Download size={18} />
+            )}
+            {isExporting ? "Memproses..." : "Export Excel"}
+          </button>
+
+          {/* INPUT PENCARIAN */}
+          <div className="relative group w-full sm:w-auto">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <Search className="h-4 w-4 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
+            </div>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={handleSearchKeyPress}
+              placeholder="Cari ID / Nama... (Enter)"
+              className="pl-10 pr-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none w-full md:w-64 bg-white text-sm transition-all shadow-sm"
+            />
           </div>
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            onKeyDown={handleSearchKeyPress}
-            placeholder="Cari ID / Nama... (Enter)"
-            className="pl-10 pr-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none w-full md:w-64 bg-white text-sm transition-all shadow-sm"
-          />
         </div>
       </div>
 
@@ -149,13 +205,13 @@ const AdminReports = () => {
                     key={report.id}
                     className="hover:bg-blue-50/50 transition-colors group"
                   >
-                    <td className="p-4 pl-6 font-mono text-sm">
+                    <td className="p-4 pl-6 font-mono text-sm text-slate-600">
                       #{report.case_id || report.id}
                     </td>
-                    <td className="p-4 font-bold text-sm">
+                    <td className="p-4 font-bold text-sm text-slate-700">
                       {report.user ? report.user.nama_lengkap : "Anonymous"}
                     </td>
-                    <td className="p-4 text-sm italic truncate max-w-xs">
+                    <td className="p-4 text-sm italic truncate max-w-xs text-slate-500">
                       "{getCleanMessage(report)}"
                     </td>
                     <td className="p-4">
@@ -198,7 +254,7 @@ const AdminReports = () => {
                   fetchReports(pagination.current_page - 1, searchQuery)
                 }
                 disabled={pagination.current_page === 1}
-                className="p-2 bg-white border rounded-xl disabled:opacity-50"
+                className="p-2 bg-white border rounded-xl disabled:opacity-50 transition-colors hover:bg-slate-50"
               >
                 <ChevronLeft size={16} />
               </button>
@@ -207,7 +263,7 @@ const AdminReports = () => {
                   fetchReports(pagination.current_page + 1, searchQuery)
                 }
                 disabled={pagination.current_page === pagination.last_page}
-                className="p-2 bg-white border rounded-xl disabled:opacity-50"
+                className="p-2 bg-white border rounded-xl disabled:opacity-50 transition-colors hover:bg-slate-50"
               >
                 <ChevronRight size={16} />
               </button>

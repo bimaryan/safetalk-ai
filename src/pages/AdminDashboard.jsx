@@ -34,7 +34,7 @@ const AdminDashboard = () => {
         }
 
         const response = await fetch(
-          "http://127.0.0.1:8000/api/admin/dashboard",
+          "https://backend.safetalkai.my.id/api/admin/dashboard",
           {
             method: "GET",
             headers: {
@@ -186,7 +186,7 @@ const AdminDashboard = () => {
           <div>
             <div className="flex justify-between text-sm mb-2">
               <span className="text-gray-600 font-medium">
-                Konsultasi Umum & Info (K5, K6)
+                Konsultasi Umum & Info K5
               </span>
               <span className="font-bold text-emerald-500">
                 {calculatePercentage(risikoRendah, totalKasus)}%

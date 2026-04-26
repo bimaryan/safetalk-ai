@@ -39,7 +39,7 @@ const Chat = () => {
     else return;
 
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/chat/history", {
+      const res = await fetch("https://backend.safetalkai.my.id/api/chat/history", {
         headers,
       });
       const data = await res.json();
@@ -116,7 +116,7 @@ const Chat = () => {
     else headers["X-Session-ID"] = sessionId;
 
     try {
-      const response = await fetch("http://127.0.0.1:8000/api/chat/send", {
+      const response = await fetch("https://backend.safetalkai.my.id/api/chat/send", {
         method: "POST",
         headers,
         body: JSON.stringify({

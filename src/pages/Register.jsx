@@ -46,7 +46,7 @@ const Register = () => {
 
     try {
       // 2. Tembak API Laravel
-      const response = await fetch("http://127.0.0.1:8000/api/auth/register", {
+      const response = await fetch("https://backend.safetalkai.my.id/api/auth/register", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

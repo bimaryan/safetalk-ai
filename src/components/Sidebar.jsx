@@ -22,7 +22,7 @@ const Sidebar = () => {
 
         if (!token) return;
 
-        const response = await fetch("http://127.0.0.1:8000/api/auth/user", {
+        const response = await fetch("https://backend.safetalkai.my.id/api/auth/user", {
           method: "GET",
           headers: {
             Accept: "application/json",
@@ -61,7 +61,7 @@ const Sidebar = () => {
         try {
           const token = localStorage.getItem("safetalk_token");
           if (token) {
-            await fetch("http://127.0.0.1:8000/api/auth/logout", {
+            await fetch("https://backend.safetalkai.my.id/api/auth/logout", {
               method: "POST",
               headers: {
                 "Accept": "application/json",
