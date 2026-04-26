@@ -33,7 +33,7 @@ const AdminReports = () => {
       }
 
       const response = await fetch(
-        `http://127.0.0.1:8000/api/admin/reports?page=${page}&search=${search}`,
+        `https://backend.safetalkai.my.id/api/admin/reports?page=${page}&search=${search}`,
         {
           method: "GET",
           headers: {
