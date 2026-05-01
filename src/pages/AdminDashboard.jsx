@@ -16,7 +16,7 @@ const AdminDashboard = () => {
   const [stats, setStats] = useState({
     total_users: 0,
     total_chats: 0,
-    category_distribution: {}, // Dibiarkan kosong, nanti ditangani oleh fungsi getCount
+    category_distribution: {},
     recent_reports: [],
   });
 
@@ -65,9 +65,19 @@ const AdminDashboard = () => {
   const getCount = (key) => Number(dist[key]) || 0;
 
   const totalKasus = Number(stats.total_chats) || 0;
-  const risikoTinggi = getCount("K1") + getCount("K3"); // Fisik & Seksual
-  const risikoSedang = getCount("K2") + getCount("K4"); // Psikis & Ekonomi
-  const risikoRendah = getCount("K5") + getCount("K6") + getCount("Umum"); // Konsultasi & Info
+
+  // PEMETAAN RISIKO BARU (Sesuai dengan AI Classifier)
+  // Darurat/Tinggi: Fisik (K4) & Darurat/Senjata/Nyawa (K5)
+  const risikoTinggi = getCount("K4") + getCount("K5");
+
+  // Sedang: Verbal/Emosional (K2) & Intimidasi/Psikologis (K3)
+  const risikoSedang = getCount("K2") + getCount("K3");
+
+  // Rendah: Keluhan relasi ringan (K1)
+  const risikoRendah = getCount("K1");
+
+  // Umum/Aman: Depresi/Curhat biasa tanpa KDRT (NON_KDRT)
+  const nonKdrt = getCount("NON_KDRT");
 
   // Fungsi utilitas untuk menghitung persentase
   const calculatePercentage = (value, total) => {
@@ -136,11 +146,11 @@ const AdminDashboard = () => {
         </div>
 
         <div className="space-y-6">
-          {/* Risiko Tinggi */}
+          {/* Risiko Darurat / Tinggi (K4, K5) */}
           <div>
             <div className="flex justify-between text-sm mb-2">
               <span className="text-gray-600 font-medium">
-                Risiko Tinggi (K1, K3)
+                Risiko Tinggi / Darurat (K4, K5)
               </span>
               <span className="font-bold text-rose-600">
                 {calculatePercentage(risikoTinggi, totalKasus)}%
@@ -159,11 +169,11 @@ const AdminDashboard = () => {
             </p>
           </div>
 
-          {/* Risiko Sedang */}
+          {/* Risiko Sedang (K2, K3) */}
           <div>
             <div className="flex justify-between text-sm mb-2">
               <span className="text-gray-600 font-medium">
-                Risiko Sedang (K2, K4)
+                Risiko Sedang (K2, K3)
               </span>
               <span className="font-bold text-amber-500">
                 {calculatePercentage(risikoSedang, totalKasus)}%
@@ -182,19 +192,19 @@ const AdminDashboard = () => {
             </p>
           </div>
 
-          {/* Risiko Rendah / Umum */}
+          {/* Risiko Rendah (K1) */}
           <div>
             <div className="flex justify-between text-sm mb-2">
               <span className="text-gray-600 font-medium">
-                Konsultasi Umum & Info K5
+                Risiko Rendah / Perhatian (K1)
               </span>
-              <span className="font-bold text-emerald-500">
+              <span className="font-bold text-blue-500">
                 {calculatePercentage(risikoRendah, totalKasus)}%
               </span>
             </div>
             <div className="w-full bg-gray-100 rounded-full h-3 mb-1 overflow-hidden">
               <div
-                className="bg-emerald-500 h-full rounded-full transition-all duration-1000"
+                className="bg-blue-500 h-full rounded-full transition-all duration-1000"
                 style={{
                   width: `${calculatePercentage(risikoRendah, totalKasus)}%`,
                 }}
@@ -202,6 +212,29 @@ const AdminDashboard = () => {
             </div>
             <p className="text-xs text-gray-400 font-medium">
               {risikoRendah} Interaksi
+            </p>
+          </div>
+
+          {/* NON KDRT / Konsultasi Umum */}
+          <div>
+            <div className="flex justify-between text-sm mb-2">
+              <span className="text-gray-600 font-medium">
+                Konsultasi Umum (NON_KDRT)
+              </span>
+              <span className="font-bold text-emerald-500">
+                {calculatePercentage(nonKdrt, totalKasus)}%
+              </span>
+            </div>
+            <div className="w-full bg-gray-100 rounded-full h-3 mb-1 overflow-hidden">
+              <div
+                className="bg-emerald-500 h-full rounded-full transition-all duration-1000"
+                style={{
+                  width: `${calculatePercentage(nonKdrt, totalKasus)}%`,
+                }}
+              ></div>
+            </div>
+            <p className="text-xs text-gray-400 font-medium">
+              {nonKdrt} Interaksi
             </p>
           </div>
         </div>
@@ -263,21 +296,23 @@ const AdminDashboard = () => {
 
                 {/* Right Section */}
                 <div className="flex flex-col items-end justify-between mt-4 md:mt-0 space-y-4">
-                  {/* Penentuan Warna Badge Kategori */}
+                  {/* Penentuan Warna Badge Kategori di List Riwayat */}
                   <span
                     className={`border text-xs font-bold px-4 py-1.5 rounded-full ${
-                      ["K1", "K3"].includes(report.category)
-                        ? "bg-rose-50 text-rose-600 border-rose-100"
-                        : ["K2", "K4"].includes(report.category)
-                          ? "bg-amber-50 text-amber-600 border-amber-100"
-                          : "bg-emerald-50 text-emerald-600 border-emerald-100"
+                      ["K4", "K5"].includes(report.category)
+                        ? "bg-rose-50 text-rose-600 border-rose-100" // Merah (Darurat)
+                        : ["K2", "K3"].includes(report.category)
+                          ? "bg-amber-50 text-amber-600 border-amber-100" // Kuning (Sedang)
+                          : report.category === "K1"
+                            ? "bg-blue-50 text-blue-600 border-blue-100" // Biru (Rendah)
+                            : "bg-emerald-50 text-emerald-600 border-emerald-100" // Hijau (NON_KDRT)
                     }`}
                   >
                     Kategori: {report.category}
                   </span>
 
                   <button
-                    onClick={() => navigate(`/admin/reports`)} // Mengarah ke halaman laporan penuh
+                    onClick={() => navigate(`/admin/reports`)}
                     className="flex items-center text-blue-600 text-sm font-bold hover:text-blue-800 transition-colors bg-blue-50 px-4 py-2 rounded-xl group-hover:bg-blue-100"
                   >
                     Lihat Penuh <ChevronRight className="w-4 h-4 ml-1" />
