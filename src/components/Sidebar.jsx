@@ -9,26 +9,33 @@ import {
   Lock,
   User,
   LogOut,
+  LogIn,
 } from "lucide-react";
 
 const Sidebar = () => {
   const navigate = useNavigate();
   const [userName, setUserName] = useState(null);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  // Cek status login instan dari token (biar UI lgsg berubah)
+  const isLoggedIn = !!localStorage.getItem("safetalk_token");
 
   useEffect(() => {
     const fetchUserData = async () => {
       try {
         const token = localStorage.getItem("safetalk_token");
-
         if (!token) return;
 
-        const response = await fetch("https://backend.safetalkai.my.id/api/auth/user", {
-          method: "GET",
-          headers: {
-            Accept: "application/json",
-            Authorization: `Bearer ${token}`,
+        const response = await fetch(
+          "https://backend.safetalkai.my.id/api/auth/user",
+          {
+            method: "GET",
+            headers: {
+              Accept: "application/json",
+              Authorization: `Bearer ${token}`,
+            },
           },
-        });
+        );
 
         if (response.ok) {
           const data = await response.json();
@@ -42,55 +49,57 @@ const Sidebar = () => {
     fetchUserData();
   }, []);
 
-  // 2. Fungsi Logout dengan SweetAlert2 & API Laravel
   const handleLogout = () => {
+    if (isLoggingOut) return;
+
     Swal.fire({
       title: "Keluar Akun?",
       text: "Sesi Anda akan diakhiri dan data sementara akan dihapus.",
       icon: "warning",
       showCancelButton: true,
-      confirmButtonColor: "#4f46e5", // Warna bg-indigo-600
-      cancelButtonColor: "#e11d48", // Warna bg-rose-600
+      confirmButtonColor: "#4f46e5",
+      cancelButtonColor: "#e11d48",
       confirmButtonText: "Ya, Keluar",
       cancelButtonText: "Batal",
-      shape: "rounded", 
+      shape: "rounded",
     }).then(async (result) => {
       if (result.isConfirmed) {
-        
-        // Panggil API Logout untuk hapus token di database
+        setIsLoggingOut(true);
+        const token = localStorage.getItem("safetalk_token");
+
         try {
-          const token = localStorage.getItem("safetalk_token");
           if (token) {
             await fetch("https://backend.safetalkai.my.id/api/auth/logout", {
               method: "POST",
               headers: {
-                "Accept": "application/json",
-                "Authorization": `Bearer ${token}`
-              }
+                Accept: "application/json",
+                Authorization: `Bearer ${token}`,
+              },
             });
           }
         } catch (error) {
           console.error("Gagal koneksi ke API Logout:", error);
+        } finally {
+          // Hapus semua data sesi di local storage
+          localStorage.removeItem("safetalk_token");
+          localStorage.removeItem("safetalk_session");
+          localStorage.removeItem("safetalk_role");
+          localStorage.removeItem("isAuthenticated");
+          localStorage.removeItem("userRole");
+
+          setUserName(null);
+          setIsLoggingOut(false);
+
+          Swal.fire({
+            title: "Berhasil Keluar!",
+            icon: "success",
+            timer: 1500,
+            showConfirmButton: false,
+          }).then(() => {
+            navigate("/login");
+            window.location.reload();
+          });
         }
-
-        // Hapus semua data sesi di local storage
-        localStorage.removeItem("safetalk_token");
-        localStorage.removeItem("isAuthenticated");
-        localStorage.removeItem("userRole");
-
-        // Reset state nama
-        setUserName(null);
-
-        // Kasih notifikasi kecil (toast) kalau berhasil
-        Swal.fire({
-          title: "Berhasil Keluar!",
-          icon: "success",
-          timer: 1500,
-          showConfirmButton: false,
-        });
-
-        // Arahkan kembali ke halaman awal
-        navigate("/");
       }
     });
   };
@@ -163,33 +172,50 @@ const Sidebar = () => {
             {/* Ikon berubah tergantung status login */}
             <div
               className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-colors ${
-                userName
+                isLoggedIn
                   ? "bg-indigo-500/20 text-indigo-400"
                   : "bg-slate-700 text-emerald-400"
               }`}
             >
-              {userName ? <User size={14} /> : <Lock size={14} />}
+              {isLoggedIn ? <User size={14} /> : <Lock size={14} />}
             </div>
 
             {/* Teks berubah tergantung status login */}
             <div className="flex flex-col overflow-hidden">
               <span className="text-[9px] text-slate-400 uppercase font-bold tracking-wider">
-                {userName ? "Warga" : "Status Sesi"}
+                {isLoggedIn ? "Warga" : "Status Sesi"}
               </span>
               <span className="text-sm text-slate-200 font-semibold tracking-wide truncate">
-                {userName ? userName : "Terlindungi"}
+                {userName
+                  ? userName
+                  : isLoggedIn
+                    ? "Memuat..."
+                    : "Anonim (Terlindungi)"}
               </span>
             </div>
           </div>
 
-          {/* Tombol Logout - HANYA MUNCUL JIKA USER LOGIN */}
-          {userName && (
+          {/* Tombol Logout ATAU Login berdasarkan status token */}
+          {isLoggedIn ? (
             <button
               onClick={handleLogout}
-              className="p-2 text-slate-400 hover:text-rose-400 hover:bg-slate-700 rounded-lg transition-all"
+              disabled={isLoggingOut}
+              className="p-2 text-slate-400 hover:text-rose-400 hover:bg-slate-700 rounded-lg transition-all disabled:opacity-50"
               title="Keluar dari akun"
             >
-              <LogOut size={16} />
+              {isLoggingOut ? (
+                <div className="w-4 h-4 border-2 border-slate-500 border-t-rose-400 rounded-full animate-spin"></div>
+              ) : (
+                <LogOut size={16} />
+              )}
+            </button>
+          ) : (
+            <button
+              onClick={() => navigate("/login")}
+              className="p-2 text-slate-400 hover:text-indigo-400 hover:bg-slate-700 rounded-lg transition-all"
+              title="Login ke Akun"
+            >
+              <LogIn size={16} />
             </button>
           )}
         </div>

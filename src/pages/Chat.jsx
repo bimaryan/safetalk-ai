@@ -28,26 +28,34 @@ const Chat = () => {
   const [isLocked, setIsLocked] = useState(false);
 
   const messagesEndRef = useRef(null);
-  const textareaRef = useRef(null); // Ref untuk auto-resize textarea
+  const textareaRef = useRef(null);
 
+  // ==========================================
+  // FETCH CHAT HISTORY DARI LARAVEL
+  // ==========================================
   const fetchHistory = async () => {
     let token = localStorage.getItem("safetalk_token");
     let sessionId = localStorage.getItem("safetalk_session");
     let headers = { Accept: "application/json" };
+
     if (token) headers["Authorization"] = `Bearer ${token}`;
     else if (sessionId) headers["X-Session-ID"] = sessionId;
     else return;
 
     try {
-      const res = await fetch("https://backend.safetalkai.my.id/api/chat/history", {
-        headers,
-      });
+      const res = await fetch(
+        "https://backend.safetalkai.my.id/api/chat/history",
+        {
+          headers,
+        },
+      );
       const data = await res.json();
 
       if (data.status === "success") {
         setIsLocked(data.is_locked || false);
 
         if (data.data.length > 0) {
+          // Gabungin pesan pembuka sama riwayat chat dari server
           setMessages([
             {
               role: "ai",
@@ -62,48 +70,53 @@ const Chat = () => {
         }
       }
     } catch (err) {
-      console.error(err);
+      console.error("Gagal load history:", err);
     }
   };
 
+  // Polling tiap 3 detik buat ngecek kalau ada balasan dari Admin
   useEffect(() => {
     fetchHistory();
     const interval = setInterval(fetchHistory, 3000);
     return () => clearInterval(interval);
   }, []);
 
+  // Auto scroll ke bawah setiap ada pesan baru
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isLoading]);
 
-  // Fungsi untuk auto-resize textarea
+  // Auto-resize tinggi textarea
   const handleInputResize = () => {
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
       textareaRef.current.style.height = `${Math.min(
         textareaRef.current.scrollHeight,
-        150, // Max height 150px
+        150,
       )}px`;
     }
   };
 
+  // ==========================================
+  // HANDLE KIRIM PESAN KE LARAVEL
+  // ==========================================
   const handleSend = async () => {
     if (!inputText.trim() || isLoading) return;
 
     const text = inputText;
-
     const currentTime = new Date().toLocaleTimeString([], {
       hour: "2-digit",
       minute: "2-digit",
     });
 
+    // 1. Munculin pesan user di layar seketika (Optimistic UI)
     setMessages((prev) => [
       ...prev,
       { role: "user", text: text, time: currentTime },
     ]);
 
     setInputText("");
-    if (textareaRef.current) textareaRef.current.style.height = "auto"; // Reset height
+    if (textareaRef.current) textareaRef.current.style.height = "auto";
     setIsLoading(true);
 
     let token = localStorage.getItem("safetalk_token");
@@ -112,17 +125,23 @@ const Chat = () => {
       "Content-Type": "application/json",
       Accept: "application/json",
     };
+
     if (token) headers["Authorization"] = `Bearer ${token}`;
     else headers["X-Session-ID"] = sessionId;
 
     try {
-      const response = await fetch("https://backend.safetalkai.my.id/api/chat/send", {
-        method: "POST",
-        headers,
-        body: JSON.stringify({
-          message: text,
-        }),
-      });
+      const response = await fetch(
+        "https://backend.safetalkai.my.id/api/chat/send",
+        {
+          method: "POST",
+          headers,
+          body: JSON.stringify({
+            // PENTING: Harus "message" di sini karena ChatController nangkap $request->message
+            message: text,
+          }),
+        },
+      );
+
       const result = await response.json();
 
       if (response.ok) {
@@ -130,10 +149,13 @@ const Chat = () => {
           localStorage.setItem("safetalk_session", result.session_id);
         }
         setIsLocked(result.is_locked || false);
+        // Panggil history lagi buat narik balasan AI/Admin
         fetchHistory();
+      } else {
+        console.error("Server error:", result);
       }
     } catch (error) {
-      console.error(error);
+      console.error("Gagal kirim pesan:", error);
     } finally {
       setIsLoading(false);
     }
@@ -141,12 +163,12 @@ const Chat = () => {
 
   const handleKeyDown = (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault(); // Mencegah pembuatan baris baru jika hanya menekan Enter
+      e.preventDefault();
       handleSend();
     }
-    // Jika Shift + Enter ditekan, biarkan default behavior (buat baris baru)
   };
 
+  // Format teks tebal (markdown style)
   const formatText = (text) => {
     if (!text) return "";
     return text.split(/(\*\*.*?\*\*)/g).map((part, i) =>
@@ -162,6 +184,7 @@ const Chat = () => {
 
   return (
     <div className="fixed inset-0 bottom-[80px] md:bottom-0 md:left-64 flex flex-col bg-slate-50 font-sans text-slate-900 overflow-hidden z-10">
+      {/* HEADER */}
       <header className="flex-none w-full px-4 md:px-6 py-4 border-b border-slate-200 bg-white shadow-sm flex items-center justify-between z-30">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white">
@@ -185,14 +208,9 @@ const Chat = () => {
             </div>
           </div>
         </div>
-        <button
-          onClick={() => navigate("/")}
-          className="p-2 text-slate-400 hover:text-slate-700 transition-all"
-        >
-          <LogOut size={20} />
-        </button>
       </header>
 
+      {/* CHAT AREA */}
       <main className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6 scroll-smooth">
         {messages.map((msg, index) => {
           const isFromAdmin = msg.role === "admin";
@@ -206,6 +224,7 @@ const Chat = () => {
                 isAlignedRight ? "flex-row-reverse" : ""
               }`}
             >
+              {/* AVATAR */}
               <div
                 className={`w-8 h-8 rounded-lg flex items-center justify-center text-[10px] font-black shrink-0 ${
                   isFromAdmin
@@ -224,6 +243,7 @@ const Chat = () => {
                 )}
               </div>
 
+              {/* BUBBLE CHAT */}
               <div
                 className={`flex flex-col ${
                   isAlignedRight ? "items-end" : "items-start"
@@ -238,24 +258,29 @@ const Chat = () => {
                         : "bg-indigo-600 border-indigo-600 text-white rounded-tr-none"
                   }`}
                 >
+                  {/* Label pesan admin */}
                   {isFromAdmin && (
                     <div className="font-black text-rose-700 text-[10px] mb-2 border-b border-rose-200 pb-1 flex items-center gap-1 uppercase tracking-widest">
                       <ShieldAlert size={12} /> PESAN ADMIN
                     </div>
                   )}
 
+                  {/* Isi Teks */}
                   {formatText(msg.text)}
 
+                  {/* TAMPILIN INSTRUKSI DARI BACKEND (Kalau ada) */}
                   {isFromAI && msg.instruction && (
                     <div className="mt-4 p-4 bg-orange-50 border-l-4 border-orange-500 rounded-xl flex gap-3 items-start text-xs font-bold text-orange-800">
                       <AlertCircle
                         size={16}
                         className="text-orange-600 shrink-0"
-                      />{" "}
+                      />
                       {msg.instruction}
                     </div>
                   )}
                 </div>
+
+                {/* WAKTU */}
                 <span className="text-[9px] text-slate-400 font-bold mt-1 px-1 italic uppercase">
                   {msg.time}
                 </span>
@@ -264,6 +289,7 @@ const Chat = () => {
           );
         })}
 
+        {/* LOADING INDICATOR (Animasi Ngetik) */}
         {isLoading && (
           <div className="flex items-start gap-3">
             <div className="w-8 h-8 rounded-lg flex items-center justify-center text-[10px] font-black shrink-0 bg-indigo-600 text-white shadow-md">
@@ -288,11 +314,14 @@ const Chat = () => {
           </div>
         )}
 
+        {/* Element kosong untuk target auto-scroll */}
         <div ref={messagesEndRef} />
       </main>
 
+      {/* FOOTER / INPUT AREA */}
       <footer className="p-4 bg-white border-t border-slate-200 z-30">
         <div className="max-w-4xl mx-auto space-y-3">
+          {/* BANNER JIKA DARURAT / DILOCK ADMIN */}
           {isLocked && (
             <div className="bg-rose-50 border border-rose-100 text-rose-600 py-1.5 rounded-xl text-center text-[10px] font-black uppercase">
               Admin sedang memantau percakapan ini

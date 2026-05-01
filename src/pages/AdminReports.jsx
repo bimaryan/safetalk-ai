@@ -6,7 +6,7 @@ import {
   Eye,
   ShieldAlert,
   Clock,
-  Download, // Icon baru untuk export
+  Download,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -14,7 +14,7 @@ const AdminReports = () => {
   const navigate = useNavigate();
   const [reports, setReports] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [isExporting, setIsExporting] = useState(false); // State loading untuk export
+  const [isExporting, setIsExporting] = useState(false);
   const [pagination, setPagination] = useState({
     current_page: 1,
     last_page: 1,
@@ -22,7 +22,6 @@ const AdminReports = () => {
   });
   const [isLoading, setIsLoading] = useState(true);
 
-  // Fungsi fetch yang mendukung pencarian
   const fetchReports = async (page = 1, search = "") => {
     setIsLoading(true);
     try {
@@ -59,7 +58,6 @@ const AdminReports = () => {
     }
   };
 
-  // Fungsi untuk Export Excel
   const handleExportExcel = async () => {
     setIsExporting(true);
     try {
@@ -75,18 +73,17 @@ const AdminReports = () => {
       );
 
       if (response.ok) {
-        // Mengubah response menjadi blob (file)
         const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);
 
-        // Membuat link download temporary
         const link = document.createElement("a");
         link.href = url;
-        link.download = `Laporan-SafeTalk-${new Date().toISOString().split("T")[0]}.xlsx`;
+        link.download = `Laporan-SafeTalk-${
+          new Date().toISOString().split("T")[0]
+        }.xlsx`;
         document.body.appendChild(link);
         link.click();
 
-        // Bersihkan link
         window.URL.revokeObjectURL(url);
         link.remove();
       } else {
@@ -110,12 +107,15 @@ const AdminReports = () => {
   }, []);
 
   const getCategoryBadge = (category) => {
-    if (["K1", "K3"].includes(category)) {
+    if (category === "NON_KDRT" || category === "SAPAAN") {
+      return "bg-emerald-100 text-emerald-700 border-emerald-200";
+    }
+    if (["K1", "K3", "K5"].includes(category)) {
       return "bg-rose-100 text-rose-700 border-rose-200";
     } else if (["K2", "K4"].includes(category)) {
       return "bg-amber-100 text-amber-700 border-amber-200";
     } else {
-      return "bg-emerald-100 text-emerald-700 border-emerald-200";
+      return "bg-slate-100 text-slate-700 border-slate-200";
     }
   };
 
@@ -142,7 +142,6 @@ const AdminReports = () => {
         </div>
 
         <div className="flex flex-col sm:flex-row items-center gap-3">
-          {/* TOMBOL EXPORT EXCEL */}
           <button
             onClick={handleExportExcel}
             disabled={isExporting}
@@ -156,10 +155,9 @@ const AdminReports = () => {
             {isExporting ? "Memproses..." : "Export Excel"}
           </button>
 
-          {/* INPUT PENCARIAN */}
           <div className="relative group w-full sm:w-auto">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Search className="h-4 w-4 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
+              <Search className="h-4 w-4 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
             </div>
             <input
               type="text"
@@ -167,7 +165,7 @@ const AdminReports = () => {
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={handleSearchKeyPress}
               placeholder="Cari ID / Nama... (Enter)"
-              className="pl-10 pr-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none w-full md:w-64 bg-white text-sm transition-all shadow-sm"
+              className="pl-10 pr-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none w-full md:w-64 bg-white text-sm transition-all shadow-sm"
             />
           </div>
         </div>
@@ -203,7 +201,7 @@ const AdminReports = () => {
                 reports.map((report) => (
                   <tr
                     key={report.id}
-                    className="hover:bg-blue-50/50 transition-colors group"
+                    className="hover:bg-indigo-50/50 transition-colors group"
                   >
                     <td className="p-4 pl-6 font-mono text-sm text-slate-600">
                       #{report.case_id || report.id}
@@ -216,7 +214,9 @@ const AdminReports = () => {
                     </td>
                     <td className="p-4">
                       <span
-                        className={`border text-[10px] font-bold px-3 py-1 rounded-full ${getCategoryBadge(report.latest_category)}`}
+                        className={`border text-[10px] font-bold px-3 py-1 rounded-full ${getCategoryBadge(
+                          report.latest_category,
+                        )}`}
                       >
                         {report.latest_category || "Umum"}
                       </span>
@@ -230,7 +230,7 @@ const AdminReports = () => {
                     <td className="p-4 text-center">
                       <button
                         onClick={() => navigate(`/admin/reports/${report.id}`)}
-                        className="p-2 bg-slate-100 hover:bg-blue-600 hover:text-white text-slate-500 rounded-xl transition-all"
+                        className="p-2 bg-slate-100 hover:bg-indigo-600 hover:text-white text-slate-500 rounded-xl transition-all"
                       >
                         <Eye size={18} />
                       </button>
@@ -242,7 +242,6 @@ const AdminReports = () => {
           </table>
         </div>
 
-        {/* PAGINATION */}
         {!isLoading && reports.length > 0 && (
           <div className="p-4 border-t border-slate-200 bg-slate-50 flex items-center justify-between">
             <span className="text-sm text-slate-500">

@@ -100,11 +100,14 @@ const AdminReportDetail = () => {
   };
 
   const getCategoryBadge = (category) => {
-    if (["K1", "K3"].includes(category))
+    if (category === "NON_KDRT" || category === "SAPAAN") {
+      return "bg-emerald-100 text-emerald-700 border-emerald-200";
+    }
+    if (["K1", "K3", "K5"].includes(category))
       return "bg-rose-100 text-rose-700 border-rose-200";
     if (["K2", "K4"].includes(category))
       return "bg-amber-100 text-amber-700 border-amber-200";
-    return "bg-emerald-100 text-emerald-700 border-emerald-200";
+    return "bg-slate-100 text-slate-700 border-slate-200";
   };
 
   const formatText = (text) => {
@@ -161,7 +164,7 @@ const AdminReportDetail = () => {
 
   if (isLoading)
     return (
-      <div className="flex justify-center items-center h-64 text-blue-600 font-bold animate-pulse">
+      <div className="flex justify-center items-center h-64 text-indigo-600 font-bold animate-pulse">
         Memuat Detail Laporan...
       </div>
     );
@@ -174,7 +177,7 @@ const AdminReportDetail = () => {
         </h2>
         <button
           onClick={() => navigate(-1)}
-          className="text-blue-600 hover:underline"
+          className="text-indigo-600 hover:underline"
         >
           Kembali
         </button>
@@ -183,11 +186,11 @@ const AdminReportDetail = () => {
 
   return (
     <div className="mx-auto space-y-6 pb-10">
-      {/* HEADER PAGE - Fixed Layout agar tidak bertumpukan */}
+      {/* HEADER PAGE */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <button
           onClick={() => navigate(-1)}
-          className="flex items-center gap-2 text-slate-500 hover:text-blue-600 font-medium transition-colors w-fit"
+          className="flex items-center gap-2 text-slate-500 hover:text-indigo-600 font-medium transition-colors w-fit"
         >
           <ArrowLeft size={18} /> Kembali ke Daftar Laporan
         </button>
@@ -226,7 +229,7 @@ const AdminReportDetail = () => {
                 triggerReport.latest_category,
               )}`}
             >
-              <ShieldAlert size={16} /> Kasus Awal:{" "}
+              <ShieldAlert size={16} /> Kasus:{" "}
               {triggerReport.latest_category || "Umum"}
             </span>
           </div>
@@ -234,7 +237,7 @@ const AdminReportDetail = () => {
 
         {/* IDENTITAS PENGIRIM */}
         <div className="flex items-center gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-100 mb-8">
-          <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center shrink-0">
+          <div className="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center shrink-0">
             <User size={24} />
           </div>
           <div className="overflow-hidden">
@@ -256,7 +259,7 @@ const AdminReportDetail = () => {
           </div>
         </div>
 
-        {/* TRANSKRIP PERCAKAPAN - Diperbaiki Balon Chat nya */}
+        {/* TRANSKRIP PERCAKAPAN */}
         <div className="space-y-6 bg-slate-50/50 p-4 md:p-6 rounded-3xl border border-slate-100 h-[500px] overflow-y-auto scroll-smooth">
           {thread.map((chat, idx) => {
             const isUser = chat.role === "user";
@@ -266,12 +269,20 @@ const AdminReportDetail = () => {
             return (
               <div
                 key={idx}
-                className={`flex items-start gap-3 ${isAdmin ? "flex-row-reverse" : ""}`}
+                className={`flex items-start gap-3 ${
+                  isAdmin ? "flex-row-reverse" : ""
+                }`}
               >
                 {/* Avatar */}
                 <div
                   className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 text-white font-black shadow-sm text-[10px]
-                  ${isUser ? "bg-slate-200 text-slate-500 border border-slate-300" : isAI ? "bg-indigo-600" : "bg-rose-600"}`}
+                  ${
+                    isUser
+                      ? "bg-slate-200 text-slate-500 border border-slate-300"
+                      : isAI
+                        ? "bg-indigo-600"
+                        : "bg-rose-600"
+                  }`}
                 >
                   {isUser ? (
                     <User size={16} />
@@ -284,7 +295,9 @@ const AdminReportDetail = () => {
 
                 {/* Bubble */}
                 <div
-                  className={`flex flex-col ${isAdmin ? "items-end" : "items-start"} max-w-[85%] min-w-[50px]`}
+                  className={`flex flex-col ${
+                    isAdmin ? "items-end" : "items-start"
+                  } max-w-[85%] min-w-[50px]`}
                 >
                   <div
                     className={`p-3 md:p-4 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap shadow-sm border
