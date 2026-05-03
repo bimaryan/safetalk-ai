@@ -119,7 +119,7 @@ const Sidebar = () => {
           </div>
           <div className="flex flex-col">
             <span className="text-xl font-extrabold tracking-tight text-white">
-              SafeTalk
+              SafeTalk AI
             </span>
           </div>
         </div>
