@@ -173,12 +173,12 @@ const Login = () => {
                     Ingat Saya
                   </span>
                 </label>
-                <Link
+                {/* <Link
                   to="/forgot"
                   className="text-sm font-black text-[#3B82F6] hover:text-blue-800 transition-colors underline-offset-4 hover:underline"
                 >
                   Lupa Password?
-                </Link>
+                </Link> */}
               </div>
 
               <button

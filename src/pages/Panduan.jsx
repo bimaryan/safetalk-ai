@@ -141,10 +141,6 @@ const Panduan = () => {
           />
         </button>
       </div>
-
-      <p className="text-center text-slate-400 text-[10px] uppercase tracking-widest pt-4">
-        SafeTalk Security Protocol v1.2
-      </p>
     </div>
   );
 };

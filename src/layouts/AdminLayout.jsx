@@ -103,7 +103,7 @@ const AdminLayout = () => {
               </div>
               <div>
                 <h1 className="text-xl font-extrabold tracking-tight text-white leading-tight">
-                  SafeTalk
+                  SafeTalk AI
                 </h1>
                 <p className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest">
                   Admin Panel
